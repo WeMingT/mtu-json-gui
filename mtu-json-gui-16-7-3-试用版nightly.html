@@ -293,6 +293,7 @@
                     <span class="text-[9px] text-gray-400">Fill</span>
                     <div id="btnFillColor" class="color-swatch-btn" style="background-color: #000000;" title="点击修改字体颜色"></div>
                     <input type="color" id="nativeFillPicker" class="hidden">
+
                 </div>
                 <div class="w-px h-6 bg-gray-600 mx-1"></div>
                 <!-- Stroke Controls (带开关) -->
@@ -350,6 +351,9 @@
                 
                 <div class="flex flex-wrap gap-1 mb-2 p-1 bg-gray-900 rounded border border-gray-700 flex-none">
                     <button class="rt-btn" onclick="insertTag('b')" title="加粗 [b]">[B]</button>
+                    <button class="rt-btn text-red-500" 
+                            onclick="insertTagWithParam('c', '颜色', '#000000')" 
+                            title="插入颜色模板 [c]">[C]</button>
                     <button class="rt-btn" onclick="insertTagWithParam('i', '角度', '15')" title="斜体 [i=15]"><span style="display: inline-block; transform: skewX(-20deg);">[I]</span></button>
                     <button class="rt-btn" onclick="insertTagWithParam('v', '垂直切变', '15')" title="垂直切变 [v=15]"><span style="display: inline-block; transform: skewY(-15deg);">[V]</span></button>
                     <button class="rt-btn text-green-300" onclick="insertTagWithParam('rot', '角度', '15')" title="旋转 [rot=15]">[R]</button>
@@ -479,6 +483,19 @@
                         </div>
                     </div>
                 </div>
+                <button class="rt-btn text-rainbow" 
+                        onclick="document.getElementById('rtColorPicker').click()" 
+                        title="调色盘">🎨</button>
+
+                <input type="color" id="rtColorPicker" 
+                    class="absolute opacity-0 pointer-events-none" 
+                    style="right: 0; top: 70%;"
+                    onchange="stageColorForReplacement(this.value)">
+
+                <button id="colorReplaceBtn" 
+                        class="hidden absolute right-14 top-2/3 bg-blue-600 text-white text-[10px] p-2 rounded shadow-xl whitespace-nowrap border border-blue-400 z-50">
+                    确认修改选中色
+                </button>
             </div>
         </div>
     </div>
@@ -537,7 +554,8 @@
         let colorPickTargetIndex = -1;
 
         let activeAutoTcy = true; // 默认开启
-        
+
+
         // --- 2. 获取 DOM 元素 (统一放在这里，解决初始化顺序问题) ---
         const sidebarStatus = document.getElementById('sidebarStatus');
         const fontWeightSelect = document.getElementById('fontWeightSelect'); // 解决报错的核心
@@ -1170,6 +1188,10 @@
                         else if (tagName === 'v' && param) currentStyle.vShear = parseFloat(param) || 0;
                         else if (tagName === 'm') currentStyle.mirror = true;
                         else if (tagName === 'mv') currentStyle.mirrorV = true; // 处理 [mv] 标签
+                        else if (tagName === 'c' && param) {
+                            currentStyle.color = param; // 存储颜色值
+                        } 
+
                         styleStack.push(currentStyle);
                     } else { if (styleStack.length > 1) styleStack.pop(); }
                 } else {
@@ -1250,6 +1272,7 @@
             
             textarea.focus();
         }
+
 
         // --- Standard Init Logic ---
         jsonInput.addEventListener('change', handleJsonUpload);
@@ -2753,8 +2776,11 @@
                 }
 
                 // 抽象绘制动作：根据当前 pass 决定调用 stroke 还是 fill
-                const executeDraw = (char, dx, dy) => {
+                const executeDraw = (char, dx, dy, tokStyle) => {
+                    // 动态决定颜色
                     if (isFill) {
+                        // 【核心新增】：优先使用标签颜色
+                        ctx.fillStyle = tokStyle.color || finalFillColor;
                         ctx.fillText(char, dx, dy);
                     } else if (isStroke) {
                         ctx.strokeText(char, dx, dy);
@@ -2985,6 +3011,10 @@
                                     ctx.restore(); 
                                     // 恢复正文字体
                                     ctx.font = `${style.italic===true?'italic ':''} ${style.bold ? 'bold' : effectiveWeight} ${fSize}px ${style.font || effectiveFont.replace(/"/g,'')}`;
+                                }
+                                if (isFill) {
+                                    // 如果标签里有颜色就用标签的，否则用区域全局颜色
+                                    ctx.fillStyle = style.color || finalFillColor; 
                                 }
 
                                 // === 3. 竖排正文绘制循环 (含贴边对齐) ===
@@ -3249,6 +3279,9 @@
                                 ctx.restore();
                                 // 恢复正文字体设置，防止影响后续字符
                                 ctx.font = `${style.italic===true?'italic ':''} ${style.bold ? 'bold' : effectiveWeight} ${fSize}px ${style.font || effectiveFont.replace(/"/g,'')}`;
+                            }
+                            if (isFill) {
+                                ctx.fillStyle = style.color || finalFillColor; 
                             }
 
                             // 渲染字符
@@ -4706,7 +4739,36 @@
             }
         }
 
+        // 暂存选中的颜色
+        let pickedColor = "#000000";
 
+        // 1. 选完颜色后，显示确认按钮
+        window.stageColorForReplacement = function(color) {
+            pickedColor = color;
+            const btn = document.getElementById('colorReplaceBtn');
+            btn.classList.remove('hidden');
+            btn.innerText = `替换为 ${color}`;
+            btn.style.backgroundColor = color;
+        };
+
+        // 2. 点击确认按钮，执行“精准替换”
+        document.getElementById('colorReplaceBtn').onclick = function() {
+            const textarea = document.getElementById('transEditArea');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+
+            // 将当前编辑框中选中的内容（通常是 #000000）替换为新颜色
+            textarea.value = text.substring(0, start) + pickedColor + text.substring(end);
+            
+            // 重新选中这个新颜色，方便你如果不满意继续改
+            textarea.focus();
+            textarea.setSelectionRange(start, start + pickedColor.length);
+            
+            // 隐藏自己并重绘画面
+            this.classList.add('hidden');
+            textarea.dispatchEvent(new Event('input'));
+        };
 
         // 点击预览块打开取色器
         document.getElementById('btnBlurColor').addEventListener('click', () => {
