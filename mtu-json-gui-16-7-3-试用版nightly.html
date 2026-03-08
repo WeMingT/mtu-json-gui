@@ -496,6 +496,17 @@
                         class="hidden absolute right-14 top-2/3 bg-blue-600 text-white text-[10px] p-2 rounded shadow-xl whitespace-nowrap border border-blue-400 z-50">
                     确认修改选中色
                 </button>
+                <div class="mt-auto mb-2 flex flex-col items-center gap-2">
+                    <div class="w-8 h-px bg-gray-700 mx-auto mb-1"></div>
+                    <a href="https://github.com/charlespfan/mtu-json-gui" 
+                    target="_blank" 
+                    class="rt-btn text-gray-400 hover:text-white hover:bg-gray-700 transition-all" 
+                    title="查看 GitHub 源码">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -525,6 +536,10 @@
         // State
         let currentJson = null, currentImage = null, regions = [];
         let displayMode = 'translation', currentFileName = "image";
+        // --- [新增] 划线多选功能状态变量 ---
+        let isAltSelecting = false;      // 是否正在进行 Alt 划线选择
+        let altSelectionPath = [];       // 存储划线的轨迹点 [{x, y}, ...]
+        let selectedIndices = [];        // 按顺序存储被划线穿过的区域索引
 
         let isSpacePressed = false;
         window.addEventListener('keydown', (e) => { if (e.code === 'Space') isSpacePressed = true; });
@@ -1074,19 +1089,23 @@
         // 绑定右侧边栏“删”按钮
         const deleteBtnRight = document.getElementById('deleteBtnRight');
 
+        // --- 修改前 ---
+        // deleteBtnRight.onclick = () => { ... deleteActiveLine(); ... };
+
+        // --- 修改后：调用我们新写的支持多选的函数 ---
         deleteBtnRight.onclick = () => {
-            // 只有在选中了区域或具体行时才执行删除
-            if (activeRegionIndex !== -1) {
-                // 调用你已经定义好的删除函数
-                deleteActiveLine();
-                
-                // 视觉反馈：按钮闪红提示
-                deleteBtnRight.classList.add('bg-red-900');
-                setTimeout(() => {
-                    deleteBtnRight.classList.remove('bg-red-900');
-                }, 200);
-            } else {
-                console.log("未选中任何内容，无需删除");
+            if (selectedItems.length > 0 || activeRegionIndex !== -1) {
+                // 如果是多选，确认提示可以稍微改一下
+                const count = selectedItems.length || 1;
+                if (confirm(`确定要删除选中的 ${count} 个内容吗？`)) {
+                    deleteSelectedItems();
+                    
+                    // 视觉反馈
+                    deleteBtnRight.classList.add('bg-red-900');
+                    setTimeout(() => {
+                        deleteBtnRight.classList.remove('bg-red-900');
+                    }, 200);
+                }
             }
         };
 
@@ -1278,9 +1297,70 @@
         jsonInput.addEventListener('change', handleJsonUpload);
         imageInput.addEventListener('change', handleImageUpload);
         fontFileInput.addEventListener('change', handleFontFileUpload);
-        mainCanvas.addEventListener('mousedown', onMouseDown);
-        mainCanvas.addEventListener('mousemove', onMouseMove);
-        mainCanvas.addEventListener('mouseup', onMouseUp);
+        // mainCanvas.addEventListener('mousedown', onMouseDown);
+        // mainCanvas.addEventListener('mousemove', onMouseMove);
+        // mainCanvas.addEventListener('mouseup', onMouseUp);
+
+        // --- 修改前：canvas.addEventListener ---
+        // --- 修改后：全部改为 mainCanvas.addEventListener ---
+
+        // --- [修改后] 核心事件监听：兼容划线多选与原版功能 ---
+
+        // --- [修改后] 核心事件监听 ---
+
+        mainCanvas.addEventListener('mousedown', (e) => {
+            // 使用你代码中原有的坐标转换函数
+            const pos = getMousePos(e); 
+            
+            if (e.altKey && e.button === 0) {
+                isAltSelecting = true;
+                altSelectionPath = [pos];
+                selectedItems = []; // 清空选中队列
+                viewState.isPanning = false; 
+                draw();
+            } else {
+                onMouseDown(e);
+            }
+        });
+
+        mainCanvas.addEventListener('mousemove', (e) => {
+            if (isAltSelecting) {
+                const pos = getMousePos(e); // 同样使用原有的转换
+                altSelectionPath.push(pos);
+
+                // --- [核心修复点]：增加 lineIdx !== -1 的判定 ---
+                const hit = findRegionAt(pos);
+                if (hit && hit.lineIdx !== -1) { // 只有穿过小框时才记录
+                    const exists = selectedItems.find(item => 
+                        item.regionIdx === hit.regionIdx && item.lineIdx === hit.lineIdx
+                    );
+                    if (!exists) {
+                        selectedItems.push(hit);
+                        activeRegionIndex = hit.regionIdx;
+                        activeLineIndex = hit.lineIdx;
+                        setActiveRegion(hit.regionIdx);
+                    }
+                }
+                draw();
+            } else {
+                onMouseMove(e);
+            }
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (isAltSelecting) {
+                isAltSelecting = false;
+                // 划线结束，开启 Shift 模式标记以维持高亮显示
+                isShiftMultiSelect = true; 
+                altSelectionPath = []; 
+                draw();
+            } else {
+                onMouseUp(e);
+            }
+        });
+
+
+        
         window.addEventListener('resize', resizeCanvas);
         // 绑定滚轮缩放 (绑定到容器上，而不是 Canvas 上，体验更好)
         const container = document.getElementById('canvasContainer');
@@ -2081,6 +2161,16 @@
             draw();
         }
 
+        // --- [修正版] 坐标转换：解决偏移和延迟问题 ---
+        function getCanvasCoordinates(e) {
+            const rect = mainCanvas.getBoundingClientRect(); 
+            // 直接使用屏幕位置减去画布边界，再除以缩放倍率即可
+            return {
+                x: (e.clientX - rect.left) / viewState.scale,
+                y: (e.clientY - rect.top) / viewState.scale
+            };
+        }
+
         function draw() {
             // 【自愈逻辑】：如果 ctx 不小心指偏了，强制纠正回来
             if (ctx !== mainCanvasCtx && !isExporting_logic_running) { 
@@ -2218,6 +2308,40 @@
                         }
 
                         // 3. 结束当前行的绘制
+                        
+
+                        // --- [修改] 渲染划线轨迹和序号 ---
+                        // --- [修正版] 渲染划线轨迹 ---
+                        // --- 渲染划线轨迹和序号 ---
+                        if (isAltSelecting && altSelectionPath.length > 1) {
+                            ctx.save();
+                            // 1. 画轨迹线
+                            ctx.beginPath();
+                            ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
+                            ctx.lineWidth = 4 / viewState.scale;
+                            ctx.lineCap = 'round';
+                            ctx.lineJoin = 'round';
+                            
+                            ctx.moveTo(altSelectionPath[0].x, altSelectionPath[0].y);
+                            for (let i = 1; i < altSelectionPath.length; i++) {
+                                ctx.lineTo(altSelectionPath[i].x, altSelectionPath[i].y);
+                            }
+                            ctx.stroke();
+
+                            // 2. 画选中序号
+                            // 此时 selectedItems 里的全是 lineIdx !== -1 的有效小框
+                            selectedItems.forEach((item, i) => {
+                                const reg = regions[item.regionIdx];
+                                const line = reg.lines[item.lineIdx];
+                                if (line) {
+                                    ctx.fillStyle = '#10b981'; // 亮绿色
+                                    ctx.font = `bold ${18 / viewState.scale}px sans-serif`;
+                                    // 画在小框的第一个点（通常是左上角）上方
+                                    ctx.fillText(i + 1, line[0][0], line[0][1] - 5);
+                                }
+                            });
+                            ctx.restore();
+                        }
                         ctx.restore();
                     });
                 }
@@ -2293,10 +2417,7 @@
             ctx.rotate(region.angle * Math.PI / 180); 
             ctx.translate(-w/2, -h/2);
             
-            // ✅ [修改 1] 统一固定大小，不再随字号变化
-            // 设定为 12px (很小但能看清)，避免遮挡
             const labelFontSize = 12; 
-            
             const regionFontSize = region.font_size || 20;
             ctx.font = `bold ${labelFontSize}px sans-serif`;
             
@@ -2304,24 +2425,22 @@
             const sizeText = `Sz:${regionFontSize.toFixed(1)}`;
             const labelText = `#${index+1} ${sizeText}${angleText}`;
             
-            const padding = 3; // 减小内边距
-            const textWidth = ctx.measureText(labelText).width;
+            const padding = 3; 
+
+            // --- 强迫症 UI 优化开始 ---
             
-            // ✅ [修改 2] 大幅提高透明度 (Alpha值调低)
-            // 选中时: 0.85 -> 0.6 (半透明红)
-            // 未选中: 0.7 -> 0.25 (高透明黑灰，几乎不挡图)
-            ctx.fillStyle = isActive ? "rgba(245, 158, 11, 0.6)" : "rgba(31, 41, 55, 0.25)";
+            // 1. 彻底移除背景绘制逻辑 (删掉了原有的 ctx.fillStyle 设置和 ctx.fillRect 调用)
             
-            // 绘制背景框
-            ctx.fillRect(0, -labelFontSize - padding * 2 - 2, textWidth + padding * 2, labelFontSize + padding * 2);
-            
-            // ✅ [修改 3] 字体也增加透明度
-            // 纯白 -> 0.85透明白，降低刺眼感
-            ctx.fillStyle = "rgba(255, 255, 255, 0.85)"; 
+            // 2. 设置字体颜色为“非常不明显的半透明”
+            // 未选中时；被选中时，既能区分又不会遮挡底图
+            ctx.fillStyle = isActive ? "rgba(245, 158, 11, 0.2)" : "rgba(22, 163, 74, 0.5)"; 
             
             ctx.textBaseline = "top"; 
+            // 绘制文字
             ctx.fillText(labelText, padding, -labelFontSize - padding - 2);
             
+            // --- 强迫症 UI 优化结束 ---
+
             ctx.restore();
         }
 
@@ -4353,26 +4472,62 @@
 
             draw();
         }
-        function deleteActiveLine() {
-            if (activeRegionIndex === -1 || activeLineIndex === -1) return;
-            
-            const r = regions[activeRegionIndex];
-            // 1. 删除该行的坐标和对应的文本
-            r.lines.splice(activeLineIndex, 1);
-            if (r.texts) r.texts.splice(activeLineIndex, 1);
-            
-            // 2. 如果行被删光了，删除整个区域
-            if (r.lines.length === 0) {
-                regions.splice(activeRegionIndex, 1);
-                resetSidebar();
+        // --- [增强版] 支持多选的删除函数 ---
+        window.deleteSelectedItems = function() {
+            // 1. 如果没有多选，则尝试删除当前活动的单条
+            if (selectedItems.length === 0) {
+                if (activeRegionIndex !== -1) {
+                    // 这里执行原本的单选删除逻辑
+                    const r = regions[activeRegionIndex];
+                    if (activeLineIndex !== -1) {
+                        r.lines.splice(activeLineIndex, 1);
+                        if (r.texts) r.texts.splice(activeLineIndex, 1);
+                        if (r.lines.length === 0) regions.splice(activeRegionIndex, 1);
+                        else initRegionBox(r);
+                    } else {
+                        regions.splice(activeRegionIndex, 1);
+                    }
+                }
             } else {
-                // 3. 模仿 Angle：删除行后重新计算大框
-                initRegionBox(r);
-                activeLineIndex = -1; // 重置选中行
-                setActiveRegion(activeRegionIndex); // 刷新侧边栏内容
+                // 2. 多选删除逻辑：按 Region 分组处理
+                const groups = {};
+                selectedItems.forEach(item => {
+                    if (!groups[item.regionIdx]) groups[item.regionIdx] = [];
+                    groups[item.regionIdx].push(item.lineIdx);
+                });
+
+                // 【关键】对 regionIdx 进行降序排列，从索引最大的开始删，防止前面的索引偏移
+                const sortedRegionIndices = Object.keys(groups).map(Number).sort((a, b) => b - a);
+
+                sortedRegionIndices.forEach(rIdx => {
+                    const r = regions[rIdx];
+                    // 对当前区域内的小框索引也进行降序排列
+                    const linesToDelete = groups[rIdx].sort((a, b) => b - a);
+
+                    linesToDelete.forEach(lIdx => {
+                        if (lIdx !== -1 && r.lines[lIdx]) {
+                            r.lines.splice(lIdx, 1);
+                            if (r.texts) r.texts.splice(lIdx, 1);
+                        }
+                    });
+
+                    // 如果该区域的所有行都被删光了，或者点中的是大框本身(lineIdx为-1)，则删除整个区域
+                    if (linesToDelete.includes(-1) || r.lines.length === 0) {
+                        regions.splice(rIdx, 1);
+                    } else {
+                        initRegionBox(r); // 重新计算剩下行框的包围盒
+                    }
+                });
             }
+
+            // 3. 清理状态并重绘
+            selectedItems = [];
+            activeRegionIndex = -1;
+            activeLineIndex = -1;
+            isShiftMultiSelect = false; // 关闭多选高亮标记
+            resetSidebar(); 
             draw();
-        }
+        };
 
         /**
         * 判断颜色是否接近白色 (带容差)
