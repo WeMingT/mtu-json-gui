@@ -1537,6 +1537,14 @@
             }
             draw();
         });
+
+        fontSizeInput.addEventListener('input', (e) => { 
+            const val = parseFloat(e.target.value); 
+            if(!isNaN(val) && val > 0) { 
+                updateActiveRegionProp('font_size', val); 
+            }
+        });
+
         lineSpacingInput.addEventListener('input', (e) => { const val = parseFloat(e.target.value); if(!isNaN(val)) updateActiveRegionProp('line_spacing', val); });
         letterSpacingInput.addEventListener('input', (e) => { const val = parseFloat(e.target.value); if(!isNaN(val)) updateActiveRegionProp('letter_spacing', val); });
         // 找到第 829 行附近的监听器绑定，改为如下带判断的写法：
