@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTU 终极版 (v3.6 性能开关版)</title>
+    <title>MTU 嵌字编辑器 (v16.13.0)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -106,7 +106,7 @@
     <!-- Top Toolbar -->
     
 
-    <div class="h-16 bg-gray-900 border-b border-gray-700 flex items-center px-4 gap-4 flex-none z-10 shadow-md overflow-x-auto">
+    <div id="topToolbar" class="h-16 bg-gray-900 border-b border-gray-700 flex items-center px-4 gap-4 flex-none z-10 shadow-md overflow-x-auto overflow-y-hidden">
 
         <div class="flex gap-2 items-center flex-shrink-0">
             <div class="flex flex-col gap-1">
@@ -192,7 +192,7 @@
         <!-- Style Controls -->
         <div class="flex items-center gap-3 bg-gray-800 p-1.5 rounded-lg border border-gray-700 flex-shrink-0">
              <div class="flex flex-col">
-                <span class="text-[9px] text-gray-400 uppercase tracking-wider">Font</span>
+                <span class="text-[9px] text-gray-400 uppercase tracking-wider">字体</span>
                 <div class="flex gap-1">
                     <select id="fontSelect" class="bg-gray-900 border border-gray-600 text-white text-xs rounded px-1 py-0.5 outline-none focus:border-blue-500 w-24 h-6">
                         <option value='"Noto Sans SC", sans-serif'>思源黑体</option>
@@ -213,7 +213,7 @@
             <input type="text" id="customFontInput" class="hidden bg-gray-900 border border-gray-600 text-white text-xs rounded px-2 py-0.5 w-20 h-6" placeholder="字体名">
 
             <div class="flex flex-col">
-                <span class="text-[9px] text-gray-400 uppercase tracking-wider font-bold text-yellow-500">Size</span>
+                <span class="text-[9px] text-gray-400 uppercase tracking-wider font-bold text-yellow-500">字号</span>
                 <div class="flex gap-1">
                     <input type="number" id="fontSizeInput" disabled step="0.5" class="bg-gray-900 border border-gray-600 text-white text-xs rounded px-1 py-0.5 w-12 h-6 text-center focus:border-yellow-500 transition-colors" placeholder="-">
                     <button onclick="applyAutoFontSize()" class="bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] rounded px-1 flex items-center justify-center border border-yellow-700 w-6 h-6" title="单页自动字号">
@@ -222,16 +222,16 @@
                 </div>
             </div>
             <div class="flex flex-col mx-1">
-                <span class="text-[9px] text-gray-400 uppercase tracking-wider font-bold text-blue-400">Weight</span>
+                <span class="text-[9px] text-gray-400 uppercase tracking-wider font-bold text-blue-400">字重</span>
                 <select id="fontWeightSelect" class="bg-gray-900 border border-gray-600 text-white text-xs rounded px-1 py-0.5 outline-none focus:border-blue-500 h-6 w-16">
-                    <option value="400">常规</option>
-                    <option value="700" selected>粗体</option> <option value="900">特粗</option>
+                    <option value="400" selected>常规</option>
+                    <option value="700">粗体</option> <option value="900">特粗</option>
                     <option value="100">细体</option>
                 </select>
             </div>
 
             <div class="flex flex-col">
-                <span class="text-[9px] text-gray-400 uppercase tracking-wider" title="对齐方式">Align</span>
+                <span class="text-[9px] text-gray-400 uppercase tracking-wider" title="对齐方式">对齐方式</span>
                 <div class="flex gap-1">
                     <select id="textAlignSelect" class="bg-gray-900 border border-gray-600 text-white text-xs rounded px-1 py-0.5 outline-none focus:border-blue-500 h-6 w-20">
                         <option value="block-center-top" selected>块居中</option>
@@ -265,7 +265,7 @@
                 </div>
             </div>
             <div class="flex flex-col">
-                <span class="text-[9px] text-gray-400 uppercase tracking-wider" title="行间距">Line H</span>
+                <span class="text-[9px] text-gray-400 uppercase tracking-wider" title="行间距">行间距</span>
                 <div class="flex gap-1">
                     <input type="number" id="lineSpacingInput" disabled step="0.01" 
                         class="bg-gray-900 border border-gray-600 text-white text-xs rounded px-1 py-0.5 w-12 h-6 text-center focus:border-blue-500" 
@@ -278,19 +278,19 @@
                 </div>
             </div>
             <div class="flex flex-col">
-                <span class="text-[9px] text-gray-400 uppercase tracking-wider" title="字间距">Letter S</span>
+                <span class="text-[9px] text-gray-400 uppercase tracking-wider" title="字间距">字间距</span>
                 <input type="number" id="letterSpacingInput" disabled step="0.01" 
                     class="bg-gray-900 border border-gray-600 text-white text-xs rounded px-1 py-0.5 w-12 h-6 text-center focus:border-blue-500" 
                     placeholder="0.00">
             </div>
             <div class="flex flex-col ml-2 items-center justify-center">
-                <span class="text-[9px] text-gray-400 uppercase tracking-wider" title="自动将2-4位数字转为纵中横">Auto TCY</span>
-                <input type="checkbox" id="autoTcyCb" checked class="h-4 w-4 mt-1 accent-blue-600 cursor-pointer">
+                <span class="text-[9px] text-gray-400 uppercase tracking-wider" title="自动将2-4位数字转为纵中横">纵中横</span>
+                <input type="checkbox" id="autoTcyCb" checked class="h-4 w-4 mt-1 accent-blue-600 cursor-pointer" title="启用/禁用纵中横">
             </div>
 
             <div class="flex items-center gap-2 ml-1">
                 <div class="flex flex-col items-center">
-                    <span class="text-[9px] text-gray-400">Fill</span>
+                    <span class="text-[9px] text-gray-400">字体颜色</span>
                     <div id="btnFillColor" class="color-swatch-btn" style="background-color: #000000;" title="点击修改字体颜色"></div>
                     <input type="color" id="nativeFillPicker" class="hidden">
 
@@ -298,7 +298,7 @@
                 <div class="w-px h-6 bg-gray-600 mx-1"></div>
                 <!-- Stroke Controls (带开关) -->
                 <div class="flex flex-col items-center">
-                    <span class="text-[9px] text-gray-400">Stroke</span>
+                    <span class="text-[9px] text-gray-400">描边</span>
                     <div class="flex items-center gap-1">
                         <input type="checkbox" id="strokeEnable" checked class="h-3 w-3 cursor-pointer" title="启用/禁用描边">
                         <div id="btnStrokeColor" class="color-swatch-btn" style="background-color: #ffffff;" title="点击修改描边颜色"></div>
@@ -319,12 +319,12 @@
                 </div>
 
                 <div class="flex flex-col items-center ml-2 border-l border-gray-700 pl-2">
-                    <span class="text-[9px] text-gray-400">Blur</span>
+                    <span class="text-[9px] text-gray-400">发光</span>
                     <div class="flex items-center gap-1">
-                        <input type="checkbox" id="blurEnable" class="h-3 w-3 cursor-pointer">
+                        <input type="checkbox" id="blurEnable" class="h-3 w-3 cursor-pointer accent-red-500" title="启用/禁用发光，仅对单框生效，算力消耗大非必要勿开">
                         <input type="number" id="blurSizeInput" step="0.01" min="0" max="1" value="0.1"
                             class="bg-gray-900 border border-gray-600 text-white text-xs rounded px-1 py-0.5 w-14 h-6 text-center focus:border-blue-500 transition-colors outline-none" 
-                            title="发光倍率 (0.1 = 10% 字号)"> 
+                            title="发光倍率 (0.1 = 10% 字号)">  
                         <div id="btnBlurColor" class="color-swatch-btn" style="background-color: #000000;" title="点击修改发光颜色"></div>
                         <input type="color" id="nativeBlurPicker" class="hidden">
                     </div>
@@ -458,7 +458,7 @@
                     -->
                     <button id="deleteBtnRight" class="rt-btn text-red-500 border-red-500/30" title="删除选中">删</button>
                 </div>
-                <button onclick="toggleReplaceDialog()" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded">🔍 查找替换</button>
+                <button onclick="toggleReplaceDialog()" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded">译文查找替换</button>
                 <div id="replaceDialog" class="hidden fixed top-20 right-12 z-50 bg-gray-800 border border-gray-600 p-4 rounded-lg shadow-2xl w-80">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-white font-bold text-sm">译文查找替换</h3>
@@ -501,7 +501,7 @@
                     <a href="https://github.com/charlespfan/mtu-json-gui" 
                     target="_blank" 
                     class="rt-btn text-gray-400 hover:text-white hover:bg-gray-700 transition-all" 
-                    title="查看 GitHub 源码">
+                    title="查看使用说明">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                         </svg>
@@ -546,7 +546,7 @@
         window.addEventListener('keyup', (e) => { if (e.code === 'Space') isSpacePressed = false; });
 
         let activeFontFamily = '"Noto Sans SC", sans-serif';
-        let activeFontWeight = "700"; // [新增] 默认字重 (700=Bold)
+        let activeFontWeight = "400"; // [新增] 默认字重 (400=Bold)
         let activeTextColor = "#000000";  // 黑色
         let activeStrokeColor = "#ffffff"; 
         let activeStrokeWidth = 0.2; 
@@ -679,6 +679,21 @@
 
         const HANDLE_RADIUS = 6;
         const ROTATE_HANDLE_OFFSET = 30;
+
+        // --- [新增] 顶部工具栏横向滚轮支持 ---
+        const topToolbar = document.getElementById('topToolbar');
+
+        if (topToolbar) {
+            topToolbar.addEventListener('wheel', (e) => {
+                // 检查是否有横向滚动需求 (如果内容没溢出则不处理)
+                if (topToolbar.scrollWidth <= topToolbar.clientWidth) return;
+
+                // 拦截纵向滚动量
+                // 如果 deltaY 为正（向下滚），我们让 scrollLeft 增加（向右滚）
+                e.preventDefault(); 
+                topToolbar.scrollLeft += e.deltaY;
+            }, { passive: false });
+        }
 
         // 切换对话框显示/隐藏
         function toggleReplaceDialog() {
@@ -1508,12 +1523,19 @@
             }
         });
 
-        strokeEnableCb.addEventListener('change', (e) => { activeStrokeEnabled = e.target.checked; draw(); });
-        fontSizeInput.addEventListener('input', (e) => { 
-            const val = parseFloat(e.target.value); 
-            if(!isNaN(val) && val > 0) { 
-                updateActiveRegionProp('font_size', val); 
+        // 修改后的描边开关监听
+        strokeEnableCb.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            
+            if (activeRegionIndex !== -1 && regions[activeRegionIndex]) {
+                // 场景 A：选中了某个框 -> 只开关当前这一个
+                regions[activeRegionIndex].strokeEnable = isChecked;
+            } else {
+                // 场景 B：没选中框 -> 修改全局默认值，并同步给所有框
+                activeStrokeEnabled = isChecked;
+                regions.forEach(r => r.strokeEnable = isChecked);
             }
+            draw();
         });
         lineSpacingInput.addEventListener('input', (e) => { const val = parseFloat(e.target.value); if(!isNaN(val)) updateActiveRegionProp('line_spacing', val); });
         letterSpacingInput.addEventListener('input', (e) => { const val = parseFloat(e.target.value); if(!isNaN(val)) updateActiveRegionProp('letter_spacing', val); });
@@ -2503,6 +2525,19 @@
 
         // --- SMART TCY ENGINE (Ultimate Edition) ---
         function drawSmartTranslation(region, onlyPass) {
+            // --- [性能防弹衣：逻辑截断] ---
+            const isGlow = onlyPass === 'glow';
+            const isStroke = onlyPass === 'stroke';
+            const isInteracting = transformState.dragging || viewState.isPanning; // 是否正在交互
+
+            // 1. 如果是发光层但没开启，或者正在拖拽（为了流畅度暂时关掉发光），直接退出
+            if (isGlow && (!region.blurEnable || isInteracting)) return;
+
+            // 2. 如果是描边层但没开启，直接退出
+            const isRegionStrokeEnabled = (region.strokeEnable !== undefined) ? region.strokeEnable : activeStrokeEnabled;
+            if (isStroke && !isRegionStrokeEnabled) return;
+            // ----------------------------
+
             // [新增] 获取当前框的字重
             const effectiveWeight = region.fontWeight || activeFontWeight;
             
@@ -2542,7 +2577,8 @@
             const finalFillColor = region.parsedColor || activeTextColor;
             const finalStrokeColor = region.strokeColor || activeStrokeColor;
             const finalStrokeWidthRatio = (region.strokeWidthRatio !== undefined) ? region.strokeWidthRatio : activeStrokeWidth;
-            
+            // 【关键修改】：优先读取单框的 strokeEnable 属性，如果没有才用全局的 activeStrokeEnabled
+            // const isRegionStrokeEnabled = (region.strokeEnable !== undefined) ? region.strokeEnable : activeStrokeEnabled;
             const useConcentricFill = region.fill_holes === true; 
 
             ctx.save();
@@ -2550,7 +2586,7 @@
             
             const isVertical = region.direction === 'v';
 
-// === MTU 自动换行逻辑 (最终像素感知版：竖排横排统一逻辑) ===
+            // === MTU 自动换行逻辑 (最终像素感知版：竖排横排统一逻辑) ===
             const originalIsMultiLine = region.lines && region.lines.length >= 2;
             const noExplicitBreak = !rawText.includes('【BR】');
             const fullText = lines.join(''); 
@@ -2845,68 +2881,98 @@
                 });
             }
             // --- Render Logic (Two Pass) ---
+            // --- 核心修复版：支持两层高斯模糊与动态字号适配 ---
             function renderPass(mode) {
                 const isGlow = mode === 'glow';
                 const isStroke = mode === 'stroke';
                 const isFill = mode === 'fill';
 
-                // 状态拦截
                 if (isGlow && !region.blurEnable) return;
-                if (isStroke && (!activeStrokeEnabled || finalStrokeWidthRatio <= 0)) return;
+                if (isStroke && (!isRegionStrokeEnabled || finalStrokeWidthRatio <= 0)) return;
 
                 ctx.save();
 
-                // --- 全局样式配置 ---
-                // 获取圆角开关状态
+
+                // 1. 设置连接形状（圆角/尖角）
                 const isRound = document.getElementById('strokeRound').checked;
                 ctx.lineJoin = isRound ? 'round' : 'miter';
                 ctx.lineCap = isRound ? 'round' : 'butt';
-
+                // 【性能修复】：将 filter 从字符循环中提取到 Pass 级别
+                // 整个 Pass 只设置一次滤镜，画完所有字符再关掉
                 if (isGlow) {
-                    // 1. 设置偏移量（把实心文字扔到画布外 5000 像素的地方）
-                    const offset = 5000;
-                    
-                    // 2. 配置发光属性
-                    const ratio = region.blurSizeRatio || 0.1; // 默认给 0.1 倍字号
-                    
-                    ctx.shadowColor = region.blurColor || "#000000";
-                    // 关键修改：乘以当前基准字号
-                    ctx.shadowBlur = baseFontSize * ratio;
-                    
-                    // 3. 关键：阴影偏移设为负值，把光晕拉回原位
-                    ctx.shadowOffsetX = -offset; 
-                    ctx.shadowOffsetY = 0;
-                    
-                    // 4. 让整个坐标系临时向右移动，这样画出来的文字就在外面了
-                    ctx.translate(offset, 0);
-
-                    // 基础颜色设置
-                    ctx.fillStyle = region.blurColor || "#000000";
+                    const blurRatio = region.blurSizeRatio || 0.1;
+                    ctx.filter = `blur(${baseFontSize * blurRatio}px)`;
                     ctx.strokeStyle = region.blurColor || "#000000";
-                }else {
-                    // 描边和填充层必须关闭发光，否则会模糊
-                    ctx.shadowBlur = 0; 
-                    if (isStroke) {
-                        ctx.strokeStyle = finalStrokeColor;
-                        ctx.lineWidth = baseFontSize * finalStrokeWidthRatio;
-                    } else if (isFill) {
-                        ctx.fillStyle = finalFillColor;
-                    }
+                } else {
+                    ctx.filter = 'none';
                 }
 
-                // 抽象绘制动作：根据当前 pass 决定调用 stroke 还是 fill
-                const executeDraw = (char, dx, dy, tokStyle) => {
-                    // 动态决定颜色
-                    if (isFill) {
-                        // 【核心新增】：优先使用标签颜色
+                // 定义内部绘制工具，增加 currentFs 参数，默认为基准字号
+                const executeDraw = (char, dx, dy, tokStyle, dotX = null, dotY = null, currentFs = baseFontSize) => {
+                    const blurRatio = region.blurSizeRatio || 0.1;
+                    const blurPx = currentFs * blurRatio; 
+
+                    // --- [模式1：发光层] ---
+                    if (isGlow) {
+                        ctx.save();
+                        // 动态根据当前字号设置滤镜和描边宽度
+                        ctx.filter = `blur(${blurPx}px)`; 
+                        ctx.strokeStyle = region.blurColor || "#000000";
+                        ctx.lineWidth = currentFs * 0.1 + (blurPx * 2); 
+                        ctx.strokeText(char, dx, dy); 
+                        
+                        // 发光层着重号
+                        if (tokStyle.dot && dotX !== null && dotY !== null) {
+                            ctx.beginPath();
+                            ctx.arc(dotX, dotY, currentFs * 0.1, 0, Math.PI * 2);
+                            ctx.stroke();
+                        }
+                        ctx.restore();
+                    } 
+                    // --- [模式2：普通描边/填孔层] ---
+                    else if (isStroke) {
+                        ctx.save();
+                        ctx.filter = 'none';
+                        ctx.strokeStyle = finalStrokeColor;
+                        
+                        // 1. 绘制文字描边
+                        if (useConcentricFill) {
+                            const maxW = currentFs * finalStrokeWidthRatio;
+                            const step = Math.max(0.5, currentFs * 0.05);
+                            for (let w = maxW; w > 0; w -= step) { 
+                                ctx.lineWidth = w; 
+                                ctx.strokeText(char, dx, dy); 
+                            }
+                            ctx.fillText(char, dx, dy);
+                        } else {
+                            ctx.lineWidth = currentFs * finalStrokeWidthRatio;
+                            ctx.strokeText(char, dx, dy);
+                        }
+
+                        // 2. 【核心修复】：补上着重号的描边逻辑
+                        if (tokStyle.dot && dotX !== null && dotY !== null) {
+                            ctx.beginPath();
+                            // 半径保持与 isFill 一致 (currentFs * 0.1)
+                            ctx.arc(dotX, dotY, currentFs * 0.1, 0, Math.PI * 2);
+                            // 使用当前设定的描边宽度
+                            ctx.lineWidth = currentFs * finalStrokeWidthRatio;
+                            ctx.stroke();
+                        }
+                        ctx.restore();
+                    }
+                    // --- [模式3：核心填充层] ---
+                    else if (isFill) {
+                        ctx.save();
+                        ctx.filter = 'none';
                         ctx.fillStyle = tokStyle.color || finalFillColor;
                         ctx.fillText(char, dx, dy);
-                    } else if (isStroke) {
-                        ctx.strokeText(char, dx, dy);
-                    } else if (isGlow) {
-                        // 关键：发光层必须真的画出内容，阴影才会出现
-                        // 我们用 fillText 来承载阴影
-                        ctx.fillText(char, dx, dy); 
+                        // 填充层着重号
+                        if (tokStyle.dot && dotX !== null && dotY !== null) {
+                            ctx.beginPath();
+                            ctx.arc(dotX, dotY, currentFs * 0.1, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        ctx.restore();
                     }
                 };
 
@@ -2997,27 +3063,45 @@
                                 // 3. 绘制阶段：使用预存的 sub._drawText 和 sub._metricsWidth
                                 let currentSubX = -totalGroupWidth / 2;
                                 tok.subTokens.forEach(sub => {
+                                    // 1. 获取当前子字符的实际字号（处理 [s] 缩放）
                                     const subFSize = fSize * (sub.style.scale || 1.0);
-                                    ctx.font = `${sub.style.italic === true ? 'italic ' : ''}${sub.style.bold ? 'bold ' : effectiveWeight} ${subFSize}px ${sub.style.font || effectiveFont.replace(/"/g, '')}`;
-                                    ctx.lineWidth = subFSize * finalStrokeWidthRatio * (1 / groupScale);
+                                    const blurPx = subFSize * (region.blurSizeRatio || 0.1);
 
+                                    // 2. 预设字体环境
+                                    ctx.font = `${sub.style.italic === true ? 'italic ' : ''}${sub.style.bold ? 'bold ' : effectiveWeight} ${subFSize}px ${sub.style.font || effectiveFont.replace(/"/g, '')}`;
+                                    
                                     const subW = sub._metricsWidth;
                                     const drawX = currentSubX + subW / 2 + (sub.style.offX || 0);
-                                    
+
                                     ctx.save(); 
                                     ctx.translate(drawX, sub.style.offY || 0);
                                     if (sub.style.rotation) ctx.rotate(sub.style.rotation * Math.PI / 180);
                                     ctx.textAlign = 'center'; 
                                     ctx.textBaseline = 'middle';
 
-                                    // --- 修改后的 TCY 绘制逻辑 ---
-                                    if (isStroke) {
-                                        ctx.strokeText(sub._drawText, 0, 0); 
-                                    } else if (isFill || isGlow) { // 加上 isGlow
+                                    // --- 核心修复：三层分层渲染逻辑 ---
+                                    if (isGlow) {
+                                        // 【发光层】：必须手动应用滤镜，并使用 strokeText 画出“光晕底座”
+                                        ctx.filter = `blur(${blurPx}px)`; 
+                                        ctx.strokeStyle = region.blurColor || "#000000";
+                                        ctx.lineWidth = subFSize * 0.1 + (blurPx * 2); 
+                                        ctx.strokeText(sub._drawText, 0, 0);
+                                    } 
+                                    else if (isStroke) {
+                                        // 【描边层】：确保滤镜关闭，画出清晰的文字轮廓
+                                        ctx.filter = 'none';
+                                        ctx.strokeStyle = finalStrokeColor;
+                                        ctx.lineWidth = subFSize * finalStrokeWidthRatio;
+                                        ctx.strokeText(sub._drawText, 0, 0);
+                                    } 
+                                    else if (isFill) {
+                                        // 【填充层】：最顶层的清晰文字本体
+                                        ctx.filter = 'none';
+                                        ctx.fillStyle = sub.style.color || finalFillColor;
                                         ctx.fillText(sub._drawText, 0, 0);
                                     }
+
                                     ctx.restore();
-                                    
                                     currentSubX += subW + (sub.style.kerning || 0) * subFSize;
                                 });
                                 ctx.restore(); 
@@ -3093,16 +3177,11 @@
                                             if (style.vShear) ctx.transform(1, Math.tan(style.vShear * Math.PI / 180) * -1, 0, 1, 0, 0);
                                             ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
                                             
-                                            if (isStroke) {
-                                                ctx.strokeStyle = finalStrokeColor;
-                                                ctx.lineWidth = rubyFontSize * finalStrokeWidthRatio; 
-                                                ctx.strokeText(rubyText[i], 0, 0);
-                                            } else {
-                                                ctx.fillStyle = finalFillColor;
-                                                ctx.fillText(rubyText[i], 0, 0);
-                                            }
+                                            // 传入 rubyFontSize 确保滤镜按比例缩小
+                                            executeDraw(rubyText[i], 0, 0, style, null, null, rubyFontSize);
                                             ctx.restore();
                                         }
+                                        ctx.restore();
                                     } else {
                                         // 挤压模式
                                         const centerY = currentY + (tokenTotalHeight / 2);
@@ -3116,16 +3195,11 @@
                                             if (isManualSkew) ctx.transform(1, 0, Math.tan(skewAngle * Math.PI / 180) * -1, 1, 0, 0);
                                             if (style.vShear) ctx.transform(1, Math.tan(style.vShear * Math.PI / 180) * -1, 0, 1, 0, 0);
                                             ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
-                                            if (isStroke) {
-                                                ctx.strokeStyle = finalStrokeColor;
-                                                ctx.lineWidth = rubyFontSize * finalStrokeWidthRatio * (1/scale);
-                                                ctx.strokeText(rubyText[i], 0, 0);
-                                            } else {
-                                                ctx.fillStyle = finalFillColor;
-                                                ctx.fillText(rubyText[i], 0, 0);
-                                            }
+                                            // 传入 rubyFontSize 确保滤镜按比例缩小
+                                            executeDraw(rubyText[i], 0, 0, style, null, null, rubyFontSize);
                                             ctx.restore();
                                         }
+                                        ctx.restore();
                                     }
                                     ctx.restore(); 
                                     // 恢复正文字体
@@ -3257,37 +3331,9 @@
 
                                     const dotCenterX = drawX + dotOffsetX;
 
-                                    if (isStroke) {
-                                        if (useConcentricFill) {
-                                            ctx.save();
-                                            const maxW = fSize * finalStrokeWidthRatio;
-                                            const step = Math.max(0.5, fSize * 0.05);
-                                            for (let w = maxW; w > 0; w -= step) { ctx.lineWidth = w; ctx.strokeText(char, drawX, drawY); }
-                                            ctx.fillText(char, drawX, drawY); 
-                                            ctx.restore();
-                                        } else {
-                                            ctx.strokeText(char, drawX, drawY);
-                                        }
-                                        
-                                        // 绘制描边版着重号
-                                        if (style.dot) {
-                                            ctx.beginPath();
-                                            ctx.arc(dotCenterX, drawY, fSize * DOT_RADIUS_RATIO, 0, Math.PI * 2);
-                                            ctx.lineWidth = fSize * finalStrokeWidthRatio; 
-                                            ctx.stroke();
-                                        }
-                                    } else if (isFill || isGlow) { 
-                                        // 关键点：发光层 (isGlow) 必须执行 fillText，阴影才会显现
-                                        ctx.fillText(char, drawX, drawY); 
-
-                                        // 同样，着重号也需要处理
-                                        if (style.dot) {
-                                            ctx.beginPath();
-                                            const dotY = drawY; // 根据你的逻辑计算
-                                            ctx.arc(dotCenterX, dotY, fSize * DOT_RADIUS_RATIO, 0, Math.PI * 2);
-                                            ctx.fill(); 
-                                        }
-                                    }
+                                    // --- 竖排逻辑：点在字符右侧 ---
+                                    // 这里的 dotCenterX 是你之前算好的 (drawX + dotOffsetX)
+                                    executeDraw(char, drawX, drawY, style, dotCenterX, drawY, fSize);
                                     
                                     ctx.restore(); 
                                     currentY += charH + item.spacing;
@@ -3361,10 +3407,11 @@
                             ctx.lineWidth = fSize * finalStrokeWidthRatio;
 
                             // === [新增] 横排 Ruby 绘制逻辑 ===
+                            // === [修复版] 横排 Ruby 绘制逻辑 ===
                             if (style.ruby) {
-                                ctx.save();
+                                ctx.save(); // 保存进入 Ruby 前的状态
                                 const rubyFontSize = fSize * RUBY_SIZE_RATIO;
-                                const rubyFont = `${style.bold ? 'bold' : ''} ${rubyFontSize}px ${style.font || effectiveFont.replace(/"/g,'')}`;
+                                const rubyFont = `${style.bold ? 'bold ' : ''}${rubyFontSize}px ${style.font || effectiveFont.replace(/"/g,'')}`;
                                 ctx.font = rubyFont;
 
                                 const rubyText = style.ruby;
@@ -3374,30 +3421,28 @@
                                 let tokenWidth = 0;
                                 if (tok.charDetails) {
                                     tok.charDetails.forEach(cd => tokenWidth += cd.advance);
+                                } else {
+                                    tokenWidth = ctx.measureText(tok.text).width; // 兜底处理
                                 }
 
                                 // 计算 Ruby 的 Y 轴位置（在正文上方）
                                 const rubyY = y - (fSize * 0.5) - (rubyFontSize * 0.5) - (fSize * RUBY_OFFSET_RATIO);
 
+                                // 在循环外统一设置对齐方式，提高性能
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+
                                 for (let rIdx = 0; rIdx < rubyCount; rIdx++) {
                                     // 在 Token 宽度内均匀分布 Ruby 字符
                                     const rubyX = currentX + (tokenWidth / rubyCount) * (rIdx + 0.5);
                                     
-                                    ctx.textAlign = 'center';
-                                    ctx.textBaseline = 'middle';
-
-                                    if (isStroke) {
-                                        ctx.strokeStyle = finalStrokeColor;
-                                        ctx.lineWidth = rubyFontSize * finalStrokeWidthRatio;
-                                        ctx.strokeText(rubyText[rIdx], rubyX, rubyY);
-                                    } else {
-                                        ctx.fillStyle = finalFillColor;
-                                        ctx.fillText(rubyText[rIdx], rubyX, rubyY);
-                                    }
+                                    // 调用全能绘制函数
+                                    executeDraw(rubyText[rIdx], rubyX, rubyY, style, null, null, rubyFontSize);
                                 }
-                                ctx.restore();
-                                // 恢复正文字体设置，防止影响后续字符
-                                ctx.font = `${style.italic===true?'italic ':''} ${style.bold ? 'bold' : effectiveWeight} ${fSize}px ${style.font || effectiveFont.replace(/"/g,'')}`;
+
+                                ctx.restore(); // 循环结束，统一恢复到正文之前的状态
+
+                                // 此时无需手动恢复 ctx.font，因为 restore 已经帮你做好了
                             }
                             if (isFill) {
                                 ctx.fillStyle = style.color || finalFillColor; 
@@ -3438,40 +3483,28 @@
                                         ctx.scale(1, -1);  // 竖向镜像翻转 [mv]
                                     }
                                     
+                                    // 找到这几行（大约在 3078 行）：
                                     if (char === "〜") ctx.scale(-1, 1);
                                     if (isManualSkew) ctx.transform(1, 0, Math.tan(skewAngle * Math.PI / 180) * -1, 1, 0, 0);
+
+                                    // --- [核心修复：插入以下代码] ---
+                                    if (style.vShear) {
+                                        // 这里的参数 2 是垂直切变位。* -1 是为了确保方向与竖排逻辑一致（向上/向下）
+                                        ctx.transform(1, Math.tan(style.vShear * Math.PI / 180) * -1, 0, 1, 0, 0);
+                                    }
+                                    // ------------------------------
+
                                     if (style.rotation) ctx.rotate(style.rotation * Math.PI / 180);
                                     
                                     ctx.textAlign = 'center'; 
                                     ctx.textBaseline = 'middle';
 
-                                    if (isStroke) {
-                                        if (useConcentricFill) {
-                                            const maxW = fSize * finalStrokeWidthRatio;
-                                            for (let w = maxW; w > 0; w -= Math.max(0.5, fSize * 0.05)) { 
-                                                ctx.lineWidth = w; ctx.strokeText(char, 0, 0); 
-                                            }
-                                            ctx.fillText(char, 0, 0);
-                                        } else {
-                                            ctx.strokeText(char, 0, 0);
-                                        }
-                                        if (style.dot) { // 着重号
-                                            ctx.beginPath();
-                                            const dotY = (fSize * 0.5) + (fSize * DOT_OFFSET_RATIO) + (fSize * DOT_RADIUS_RATIO);
-                                            ctx.arc(0, dotY, fSize * DOT_RADIUS_RATIO, 0, Math.PI * 2);
-                                            ctx.lineWidth = fSize * finalStrokeWidthRatio; ctx.stroke();
-                                        }
-                                    } else if (isFill || isGlow) {
-                                        // 发光层和填充层都调用 fillText
-                                        ctx.fillText(char, 0, 0);
+                                    // --- 横排逻辑：点在字符下方 ---
+                                    // 计算横排着重号的 Y 轴偏移（在字符中心下方）
+                                    const hDotY = (fSize * 0.5) + (fSize * 0.05) + (fSize * 0.1);
+                                    // [修复] 横排正文调用，传入 fSize
+                                    executeDraw(item.char, 0, 0, tok.style, 0, hDotY, fSize);
 
-                                        if (style.dot) {
-                                            ctx.beginPath();
-                                            const dotY = (fSize * 0.5) + (fSize * DOT_OFFSET_RATIO) + (fSize * DOT_RADIUS_RATIO);
-                                            ctx.arc(0, dotY, fSize * DOT_RADIUS_RATIO, 0, Math.PI * 2);
-                                            ctx.fill(); 
-                                        }
-                                    }
                                     ctx.restore();
                                     currentX += item.advance;
                                 });
@@ -4711,7 +4744,9 @@
             container.style.opacity = '1';
             container.style.pointerEvents = 'auto';
             sidebarStatus.innerHTML = `<span class="text-yellow-500">#${i + 1}</span> / ${regions.length}`;
-
+            // [新增] 同步描边开关状态到顶部 UI
+            // 如果该区域没设置过开关，则跟随全局默认值
+            strokeEnableCb.checked = (r.strokeEnable !== undefined) ? r.strokeEnable : activeStrokeEnabled;
             // --- C. 填充内容 ---
             // 译文框：处理换行符
             document.getElementById('transEditArea').value = (r.translation || "").replace(/【BR】/g, '\n');
@@ -4734,6 +4769,7 @@
             document.getElementById('blurEnable').checked = !!r.blurEnable;
             // 将原来的数值作为倍率显示，比如 0.1 表示 10% 的字号
             document.getElementById('blurSizeInput').value = r.blurSizeRatio || 0.1;
+
             document.getElementById('btnBlurColor').style.backgroundColor = r.blurColor || "#000000";
 
             updateColorSwatches();
@@ -4952,7 +4988,6 @@
                 draw();
             }
         });
-
 
         // 译文即时重绘：处理换行标签
         // 修改监听器 ---
